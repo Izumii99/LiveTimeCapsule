@@ -55,13 +55,28 @@ create index if not exists idx_gifted_items_date_created
 create index if not exists idx_chat_highlights_created
   on public.chat_highlights (created_at desc);
 
--- 2. Strict Row Level Security (Default-Deny for public/anon/authenticated)
+-- 2. Strict Row Level Security & Explicit Server-Only Grants
 -- No client-side policies are defined on purpose: all reads and writes route
 -- through Next.js server handlers using SUPABASE_SERVICE_ROLE_KEY.
 alter table public.memories enable row level security;
 alter table public.memory_notes enable row level security;
 alter table public.gifted_items enable row level security;
 alter table public.chat_highlights enable row level security;
+
+revoke all on table
+  public.memories,
+  public.memory_notes,
+  public.gifted_items,
+  public.chat_highlights
+from anon, authenticated;
+
+grant usage on schema public to service_role;
+grant all on table
+  public.memories,
+  public.memory_notes,
+  public.gifted_items,
+  public.chat_highlights
+to service_role;
 
 -- 3. Public-read / server-write Storage Bucket
 insert into storage.buckets (id, name, public)

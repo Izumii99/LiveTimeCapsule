@@ -2,16 +2,33 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronUp, MailOpen } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronUp,
+  Images,
+  MailOpen,
+  MessageSquareHeart,
+} from "lucide-react";
 import { CAPSULE_CONFIG } from "@/config/capsule";
 import { CapsuleMark } from "./CapsuleMark";
 
-export function OpeningLetter() {
+interface OpeningLetterProps {
+  onOpenGallery?: () => void;
+  onOpenChats?: () => void;
+}
+
+export function OpeningLetter({
+  onOpenGallery,
+  onOpenChats,
+}: OpeningLetterProps) {
   const prefersReducedMotion = useReducedMotion();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <section aria-labelledby="opening-letter-heading" className="mb-10">
+    <section
+      aria-labelledby="opening-letter-heading"
+      className="mx-auto max-w-3xl"
+    >
       <AnimatePresence mode="wait" initial={false}>
         {!isOpen ? (
           <motion.div
@@ -20,7 +37,7 @@ export function OpeningLetter() {
             animate={{ opacity: 1, y: 0 }}
             exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="capsule-surface relative overflow-hidden rounded-2xl p-6 sm:p-8"
+            className="capsule-surface relative overflow-hidden rounded-2xl p-6 sm:p-9"
           >
             <div
               aria-hidden="true"
@@ -41,9 +58,11 @@ export function OpeningLetter() {
                     A sealed note for {CAPSULE_CONFIG.friend}
                   </h2>
                   <p className="mt-1.5 text-sm leading-relaxed text-[var(--text-secondary)]">
-                    From {CAPSULE_CONFIG.me} ({CAPSULE_CONFIG.meAliases.join(" / ")}) to{" "}
-                    {CAPSULE_CONFIG.friend} ({CAPSULE_CONFIG.friendAliases.join(" / ")})
-                    &mdash; tap the seal to read inside.
+                    From {CAPSULE_CONFIG.me} (
+                    {CAPSULE_CONFIG.meAliases.join(" / ")}) to{" "}
+                    {CAPSULE_CONFIG.friend} (
+                    {CAPSULE_CONFIG.friendAliases.join(" / ")}). Tap the seal to
+                    read inside.
                   </p>
                 </div>
               </div>
@@ -100,11 +119,63 @@ export function OpeningLetter() {
             </div>
 
             <p className="mt-8 font-serif text-[0.98rem] italic text-[var(--accent-soft)]">
-              &mdash; {CAPSULE_CONFIG.openingLetterSignOff}
+              {CAPSULE_CONFIG.openingLetterSignOff}
             </p>
           </motion.article>
         )}
       </AnimatePresence>
+
+      {onOpenGallery && onOpenChats ? (
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={onOpenGallery}
+            className="capsule-surface group flex items-center justify-between gap-4 rounded-2xl p-5 text-left transition-colors hover:border-[rgba(192,132,252,0.36)]"
+          >
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[rgba(168,85,247,0.28)] bg-[rgba(168,85,247,0.12)] text-[var(--accent-soft)]">
+                <Images className="h-4 w-4" aria-hidden="true" />
+              </div>
+              <div>
+                <h3 className="font-serif text-base font-medium text-[var(--text-primary)]">
+                  Gallery
+                </h3>
+                <p className="mt-0.5 text-xs leading-relaxed text-[var(--text-secondary)]">
+                  Screenshots, outfit checks, gifted items, and timed capsules.
+                </p>
+              </div>
+            </div>
+            <ArrowRight
+              className="h-4 w-4 shrink-0 text-[var(--text-muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--accent-soft)]"
+              aria-hidden="true"
+            />
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenChats}
+            className="capsule-surface group flex items-center justify-between gap-4 rounded-2xl p-5 text-left transition-colors hover:border-[rgba(244,114,182,0.36)]"
+          >
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[rgba(244,114,182,0.28)] bg-[rgba(244,114,182,0.12)] text-[#F9A8D4]">
+                <MessageSquareHeart className="h-4 w-4" aria-hidden="true" />
+              </div>
+              <div>
+                <h3 className="font-serif text-base font-medium text-[var(--text-primary)]">
+                  Chat Highlights
+                </h3>
+                <p className="mt-0.5 text-xs leading-relaxed text-[var(--text-secondary)]">
+                  Archived .txt chat logs and favorite late-night quotes.
+                </p>
+              </div>
+            </div>
+            <ArrowRight
+              className="h-4 w-4 shrink-0 text-[var(--text-muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-[#F9A8D4]"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -29,18 +29,19 @@ Private shared memory vault built with Next.js (App Router), Tailwind CSS, Frame
     │   ├── format.ts            # Date, countdown, and byte formatting helpers
     │   └── types.ts             # Shared TypeScript interfaces
     ├── components/
+    │   ├── InteractiveMidnightBg.tsx # Cursor-reactive starlight & ambient aurora canvas
     │   ├── LockScreen.tsx       # Passcode gate UI
     │   ├── CapsuleGate.tsx      # Session state switcher
-    │   ├── CapsuleWorkspace.tsx # Navigation shell & tab router
+    │   ├── CapsuleWorkspace.tsx # Navigation shell (Letter, Gallery, Chat Highlights)
     │   ├── OpeningLetter.tsx    # Interactive sealed envelope letter
     │   ├── BgmPlayer.tsx        # Floating audio player (paused by default)
-    │   ├── MemoryGallery.tsx    # Masonry scrapbook, filters, and open-slot card
+    │   ├── MemoryGallery.tsx    # Masonry gallery, filters, and open-slot card
     │   ├── MemoryCard.tsx       # Polaroid card + live Time Capsule countdown
     │   ├── UploadMemoryModal.tsx
     │   ├── MemoryLightbox.tsx   # Full view, delete confirmation, and mini notes thread
-    │   ├── ItemHallOfFame.tsx   # Gifted items tribute tab
-    │   ├── AddItemModal.tsx
-    │   ├── ChatHighlights.tsx   # Dual-side chat bubble archive tab
+    │   ├── ChatHighlights.tsx   # Dual-side chat bubble archive & .txt importer
+    │   ├── ChatBubbleStream.tsx # Date dividers, timestamps, and auto side alignment
+    │   ├── ChatReaderModal.tsx  # Full searchable reader with append .txt
     │   ├── AddChatModal.tsx
     │   └── ToastProvider.tsx
     └── app/
@@ -52,7 +53,6 @@ Private shared memory vault built with Next.js (App Router), Tailwind CSS, Frame
             ├── storage/sign-upload/route.ts
             ├── memories/route.ts & [id]/route.ts
             ├── notes/route.ts & [id]/route.ts
-            ├── items/route.ts & [id]/route.ts
             └── chats/route.ts & [id]/route.ts
 ```
 

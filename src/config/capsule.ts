@@ -22,7 +22,7 @@ export const CAPSULE_CONFIG = {
   openingLetterSignOff: "Always glad we queued up, Izumi (cumi)",
   openingLetter: [
     "I made this little corner of the internet so our favorite nights online don't vanish under a pile of Discord scrolls and full screenshot folders.",
-    "We only have a handful of screenshots tucked in right now, and that's the whole point. This vault is meant to grow with us — every chaotic lobby moment, every outfit check, every item you randomly gifted me, and every late-night chat line that made us laugh way too hard.",
+    "We only have a handful of screenshots tucked in right now, and that's the whole point. This vault is meant to grow with us, keeping every chaotic lobby moment, every outfit check, every item you randomly gifted me, and every late-night chat line that made us laugh way too hard.",
     "Whether I'm calling you Rui, Lunelle, or kekski, and whether you're teasing cumi right back, thank you for making every session feel lighter and warmer than the day before.",
     "Whenever something happens that we never want to forget, drop it in here. Let's fill these empty slots together.",
   ],

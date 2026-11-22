@@ -291,7 +291,7 @@ export function AddChatModal({
               Archive a Chat Exchange
             </h2>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
-              Import `.txt` chat exports directly (with fancy font cleanup &amp;
+              Import .txt chat exports directly (with fancy font cleanup &amp;
               deduplication) or write a short highlight manually.
             </p>
           </div>
@@ -421,10 +421,10 @@ export function AddChatModal({
                     aria-hidden="true"
                   />
                   <p className="mt-2.5 text-sm font-medium text-[var(--text-primary)]">
-                    Drop one or more `.txt` chat files here
+                    Drop one or more .txt chat files here
                   </p>
                   <p className="mt-1 text-xs text-[var(--text-muted)]">
-                    Supports `Chat_Record_*.txt` format (`[date, time] Name: message`)
+                    Supports Chat_Record_*.txt format ([date, time] Name: message)
                   </p>
                 </div>
 

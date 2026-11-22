@@ -22,16 +22,6 @@ export interface MemoryItem {
   notes_count: number;
 }
 
-export interface GiftedItem {
-  id: string;
-  name: string;
-  image_url: string | null;
-  storage_path: string | null;
-  lore_note: string;
-  gifted_date: string;
-  created_at: string;
-}
-
 export interface ChatMessageLine {
   sender: string;
   text: string;

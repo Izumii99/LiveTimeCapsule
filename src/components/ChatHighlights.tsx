@@ -157,7 +157,7 @@ export function ChatHighlights({
             Chat Highlights
           </h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Import `.txt` chat exports or archive quotes between{" "}
+            Import .txt chat exports or archive quotes between{" "}
             {CAPSULE_CONFIG.friend} and {CAPSULE_CONFIG.me}.
           </p>
         </div>

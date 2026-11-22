@@ -144,11 +144,11 @@ export function MemoryGallery({
               id="gallery-heading"
               className="font-serif text-2xl font-medium text-[var(--text-primary)] sm:text-[1.75rem]"
             >
-              Living Memory Gallery
+              Gallery
             </h2>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              Screenshots, outfit checks, and moments saved by {CAPSULE_CONFIG.me} &amp;{" "}
-              {CAPSULE_CONFIG.friend}.
+              Screenshots, outfit checks, gifted items, and moments saved by{" "}
+              {CAPSULE_CONFIG.me} &amp; {CAPSULE_CONFIG.friend}.
             </p>
           </div>
 

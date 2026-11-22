@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Lora, Plus_Jakarta_Sans } from "next/font/google";
+import { InteractiveMidnightBg } from "@/components/InteractiveMidnightBg";
 import { CAPSULE_CONFIG } from "@/config/capsule";
 import "./globals.css";
 
@@ -40,9 +41,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${plusJakartaSans.variable} ${lora.variable}`}
+      className={`${plusJakartaSans.variable} ${lora.variable} midnight-backdrop`}
     >
-      <body className="midnight-backdrop antialiased">{children}</body>
+      <body className="relative antialiased">
+        <InteractiveMidnightBg />
+        <div className="relative z-10">{children}</div>
+      </body>
     </html>
   );
 }

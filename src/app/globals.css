@@ -22,7 +22,7 @@
 }
 
 @theme inline {
-  --color-base: var(--bg-base);
+  --color-midnight: var(--bg-base);
   --color-surface: var(--bg-surface);
   --color-elevated: var(--bg-elevated);
   --color-accent: var(--accent);
@@ -41,7 +41,7 @@
 
   body {
     min-height: 100dvh;
-    background-color: var(--bg-base);
+    background-color: transparent;
     color: var(--text-primary);
     font-family: var(--font-sans);
     caret-color: var(--accent-soft);

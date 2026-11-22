@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+:root {
+  --bg-base: #0b0a10;
+  --bg-surface: #14121d;
+  --bg-elevated: #1c1928;
+  --bg-input: #0f0d16;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --accent: #a855f7;
+  --accent-soft: #c084fc;
+  --accent-button: #8b3ce0;
+  --accent-button-hover: #7c2dd2;
+  --rose-glow: rgba(244, 114, 182, 0.12);
+  --violet-glow: rgba(168, 85, 247, 0.16);
+  --text-primary: #f5f3fa;
+  --text-secondary: #c4bdd6;
+  --text-muted: #9890b0;
+  --danger: #fb7185;
+  --danger-bg: rgba(251, 113, 133, 0.1);
+  --danger-border: rgba(251, 113, 133, 0.28);
+}
+
+@theme inline {
+  --color-base: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --font-sans: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-serif: var(--font-lora), "Lora", Georgia, serif;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    caret-color: var(--accent-soft);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: rgba(168, 85, 247, 0.34);
+    color: var(--text-primary);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Custom midnight scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.28) var(--bg-base);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.28);
+  border-radius: 9999px;
+  border: 2px solid var(--bg-base);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.48);
+}
+
+.midnight-backdrop {
+  background-color: var(--bg-base);
+  background-image:
+    radial-gradient(ellipse 68% 52% at 18% 12%, var(--violet-glow), transparent 62%),
+    radial-gradient(ellipse 56% 46% at 84% 86%, var(--rose-glow), transparent 64%);
+}
+
+.capsule-surface {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,24 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Runs at 00:00 UTC every 4 days to prevent Supabase free-tier 7-day pause
+    - cron: "0 0 */4 * *"
+  workflow_dispatch:
+
+jobs:
+  ping-health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping capsule health endpoint
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "Error: APP_URL repository secret is not set."
+            exit 1
+          fi
+          TARGET="${APP_URL%/}/api/health"
+          echo "Pinging $TARGET"
+          curl --fail --silent --show-error --max-time 30 "$TARGET"
+          echo ""

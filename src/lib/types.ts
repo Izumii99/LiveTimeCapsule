@@ -33,8 +33,9 @@ export interface GiftedItem {
 }
 
 export interface ChatMessageLine {
-  sender: CapsuleAuthor;
+  sender: string;
   text: string;
+  date_time?: string;
 }
 
 export interface ChatHighlight {

@@ -1,17 +1,36 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Loader2, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Expand, Loader2, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { CAPSULE_CONFIG } from "@/config/capsule";
+import { splitDateTime } from "@/lib/chat-parser";
 import { formatDateTime } from "@/lib/format";
 import type { ChatHighlight } from "@/lib/types";
 import { AddChatModal } from "./AddChatModal";
+import { ChatBubbleStream } from "./ChatBubbleStream";
+import { ChatReaderModal } from "./ChatReaderModal";
 import { useToast } from "./ToastProvider";
 
 interface ChatHighlightsProps {
   externalAddOpen: boolean;
   onExternalAddClose: () => void;
   onOpenAdd: () => void;
+}
+
+const PREVIEW_LIMIT = 5;
+
+function getChatDateRangeLabel(chat: ChatHighlight): string {
+  const dated = chat.messages
+    .map((m) => splitDateTime(m.date_time).date)
+    .filter(Boolean);
+
+  if (dated.length === 0) {
+    return formatDateTime(chat.created_at);
+  }
+
+  const first = dated[0];
+  const last = dated[dated.length - 1];
+  return first === last ? first : `${first} – ${last}`;
 }
 
 export function ChatHighlights({
@@ -25,6 +44,7 @@ export function ChatHighlights({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadTick, setReloadTick] = useState(0);
 
+  const [activeReaderId, setActiveReaderId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -68,6 +88,11 @@ export function ChatHighlights({
     };
   }, [reloadTick]);
 
+  const activeReaderChat = useMemo(
+    () => chats.find((item) => item.id === activeReaderId) ?? null,
+    [chats, activeReaderId]
+  );
+
   const handleRetry = useCallback(() => {
     setIsLoading(true);
     setLoadError(null);
@@ -77,10 +102,20 @@ export function ChatHighlights({
   const handleCreated = useCallback(
     (created: ChatHighlight) => {
       setChats((prev) => [created, ...prev]);
-      notify(`Saved "${created.title}" to Chat Highlights.`);
+      notify(
+        `Saved "${created.title}" (${created.messages.length} ${
+          created.messages.length === 1 ? "message" : "messages"
+        }).`
+      );
     },
     [notify]
   );
+
+  const handleUpdated = useCallback((updated: ChatHighlight) => {
+    setChats((prev) =>
+      prev.map((item) => (item.id === updated.id ? updated : item))
+    );
+  }, []);
 
   async function handleDelete(chat: ChatHighlight) {
     setDeletingId(chat.id);
@@ -97,6 +132,9 @@ export function ChatHighlights({
 
       setChats((prev) => prev.filter((entry) => entry.id !== chat.id));
       setConfirmDeleteId(null);
+      if (activeReaderId === chat.id) {
+        setActiveReaderId(null);
+      }
       notify(`Deleted "${chat.title}".`);
     } catch (err) {
       notify(
@@ -119,13 +157,13 @@ export function ChatHighlights({
             Chat Highlights
           </h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Late-night quotes and chaotic exchanges between {CAPSULE_CONFIG.friend}{" "}
-            and {CAPSULE_CONFIG.me}.
+            Import `.txt` chat exports or archive quotes between{" "}
+            {CAPSULE_CONFIG.friend} and {CAPSULE_CONFIG.me}.
           </p>
         </div>
 
         <span className="tabular-nums text-xs font-medium text-[var(--text-muted)]">
-          {chats.length} {chats.length === 1 ? "exchange" : "exchanges"}
+          {chats.length} {chats.length === 1 ? "archive" : "archives"}
         </span>
       </div>
 
@@ -175,12 +213,12 @@ export function ChatHighlights({
                 <Plus className="h-5 w-5" aria-hidden="true" />
               </span>
               <span className="mt-4 font-serif text-lg font-medium text-[var(--text-primary)]">
-                Archive a Chat Exchange
+                Import .txt or Add Chat
               </span>
-              <span className="mt-1.5 max-w-[30ch] text-xs leading-relaxed text-[var(--text-secondary)]">
+              <span className="mt-1.5 max-w-[32ch] text-xs leading-relaxed text-[var(--text-secondary)]">
                 {chats.length === 0
-                  ? "Save a funny back-and-forth without digging through messy screenshots."
-                  : "Capture another iconic conversation line between the two of you."}
+                  ? "Drop a Chat_Record .txt export or build a quick back-and-forth quote."
+                  : "Import another .txt log or capture a fresh conversation."}
               </span>
             </button>
           </div>
@@ -188,6 +226,10 @@ export function ChatHighlights({
           {chats.map((chat) => {
             const isConfirming = confirmDeleteId === chat.id;
             const isDeleting = deletingId === chat.id;
+            const remainingCount = Math.max(
+              0,
+              chat.messages.length - PREVIEW_LIMIT
+            );
 
             return (
               <article
@@ -195,32 +237,46 @@ export function ChatHighlights({
                 className="capsule-surface mb-5 break-inside-avoid rounded-2xl p-5 sm:p-6"
               >
                 <div className="flex items-start justify-between gap-3 border-b border-[var(--border-subtle)] pb-3.5">
-                  <div>
-                    <h3 className="font-serif text-lg font-medium text-[var(--text-primary)]">
+                  <div className="min-w-0">
+                    <h3 className="truncate font-serif text-lg font-medium text-[var(--text-primary)]">
                       {chat.title}
                     </h3>
                     <p className="tabular-nums mt-0.5 text-xs text-[var(--text-muted)]">
-                      {formatDateTime(chat.created_at)}
+                      {chat.messages.length}{" "}
+                      {chat.messages.length === 1 ? "message" : "messages"}{" "}
+                      &middot; {getChatDateRangeLabel(chat)}
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setConfirmDeleteId(isConfirming ? null : chat.id)
-                    }
-                    disabled={isDeleting}
-                    aria-label={`Delete ${chat.title}`}
-                    className="rounded-lg p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] disabled:opacity-50"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setActiveReaderId(chat.id)}
+                      aria-label={`Open full chat ${chat.title}`}
+                      title="Open full chat"
+                      className="rounded-lg p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent-soft)]"
+                    >
+                      <Expand className="h-4 w-4" aria-hidden="true" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setConfirmDeleteId(isConfirming ? null : chat.id)
+                      }
+                      disabled={isDeleting}
+                      aria-label={`Delete ${chat.title}`}
+                      className="rounded-lg p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--danger-bg)] hover:text-[var(--danger)] disabled:opacity-50"
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
 
                 {isConfirming ? (
                   <div className="mt-3.5 rounded-xl border border-[var(--danger-border)] bg-[var(--danger-bg)] p-3">
                     <p className="text-xs font-medium text-[var(--danger)]">
-                      Delete this chat highlight permanently?
+                      Delete this chat archive permanently?
                     </p>
                     <div className="mt-2.5 flex items-center gap-2">
                       <button
@@ -249,46 +305,26 @@ export function ChatHighlights({
                   </div>
                 ) : null}
 
-                {/* Dual-side chat bubbles */}
-                <div className="mt-4 space-y-2.5">
-                  {chat.messages.map((line, index) => {
-                    const isMe = line.sender === CAPSULE_CONFIG.me;
-                    const previousSender = chat.messages[index - 1]?.sender;
-                    const showLabel = previousSender !== line.sender;
+                <div className="mt-4">
+                  <ChatBubbleStream
+                    messages={chat.messages.slice(0, PREVIEW_LIMIT)}
+                    compact
+                  />
+                </div>
 
-                    return (
-                      <div
-                        key={index}
-                        className={
-                          isMe
-                            ? "flex flex-col items-end"
-                            : "flex flex-col items-start"
-                        }
-                      >
-                        {showLabel ? (
-                          <span
-                            className={
-                              isMe
-                                ? "mb-1 px-1 text-[11px] font-medium text-[#D8B4FE]"
-                                : "mb-1 px-1 text-[11px] font-medium text-[#F9A8D4]"
-                            }
-                          >
-                            {line.sender}
-                          </span>
-                        ) : null}
-
-                        <div
-                          className={
-                            isMe
-                              ? "max-w-[85%] rounded-2xl rounded-br-md border border-[rgba(192,132,252,0.28)] bg-[rgba(168,85,247,0.16)] px-3.5 py-2.5 text-sm leading-relaxed text-[var(--text-primary)]"
-                              : "max-w-[85%] rounded-2xl rounded-bl-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3.5 py-2.5 text-sm leading-relaxed text-[var(--text-primary)]"
-                          }
-                        >
-                          {line.text}
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="mt-4 border-t border-[var(--border-subtle)] pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveReaderId(chat.id)}
+                    className="flex w-full items-center justify-between text-xs font-medium text-[var(--accent-soft)] transition-colors hover:text-[#E9D5FF]"
+                  >
+                    <span>
+                      {remainingCount > 0
+                        ? `Read full chat (+${remainingCount} more)`
+                        : "Open reader & append .txt"}
+                    </span>
+                    <Expand className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
                 </div>
               </article>
             );
@@ -301,6 +337,15 @@ export function ChatHighlights({
         onClose={onExternalAddClose}
         onCreated={handleCreated}
       />
+
+      {activeReaderChat ? (
+        <ChatReaderModal
+          key={activeReaderChat.id}
+          chat={activeReaderChat}
+          onClose={() => setActiveReaderId(null)}
+          onUpdated={handleUpdated}
+        />
+      ) : null}
     </section>
   );
 }

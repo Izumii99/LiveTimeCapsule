@@ -73,16 +73,16 @@ assert.equal(
 
 assert.deepEqual(
   parseChatMessages([
-    { sender: "Rui", text: "  queue one more? " },
-    { sender: "Izumi", text: "always" },
+    { sender: "Rui", text: "  queue one more? ", date_time: "17/08/2026, 22.42.48" },
+    { sender: "Cumi", text: "always" },
   ]),
   [
-    { sender: "Rui", text: "queue one more?" },
-    { sender: "Izumi", text: "always" },
+    { sender: "Rui", text: "queue one more?", date_time: "17/08/2026, 22.42.48" },
+    { sender: "Cumi", text: "always" },
   ]
 );
 assert.equal(parseChatMessages([]), null);
-assert.equal(parseChatMessages([{ sender: "Unknown", text: "hi" }]), null);
+assert.equal(parseChatMessages([{ sender: "   ", text: "hi" }]), null);
 assert.equal(parseChatMessages([{ sender: "Rui", text: "   " }]), null);
 
 console.log("validation checks passed");

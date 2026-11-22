@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types tests/auth.check.ts && node --experimental-strip-types tests/validation.check.ts"
+    "test": "node --experimental-strip-types tests/auth.check.ts && node --experimental-strip-types tests/validation.check.ts && node --experimental-strip-types tests/chat-parser.check.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.2",

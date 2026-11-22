@@ -137,28 +137,53 @@ export function isExpectedSupabasePublicUrl(
 
 export function parseChatMessages(
   value: unknown
-): Array<{ sender: CapsuleAuthor; text: string }> | null {
-  if (!Array.isArray(value) || value.length === 0 || value.length > 50) {
+): Array<{ sender: string; text: string; date_time?: string }> | null {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 3000) {
     return null;
   }
 
-  const parsed: Array<{ sender: CapsuleAuthor; text: string }> = [];
+  const parsed: Array<{ sender: string; text: string; date_time?: string }> = [];
   for (const raw of value) {
     if (!raw || typeof raw !== "object") {
       return null;
     }
 
-    const entry = raw as { sender?: unknown; text?: unknown };
-    if (!isAllowedAuthor(entry.sender) || typeof entry.text !== "string") {
+    const entry = raw as {
+      sender?: unknown;
+      text?: unknown;
+      date_time?: unknown;
+    };
+
+    if (typeof entry.sender !== "string" || typeof entry.text !== "string") {
       return null;
     }
 
+    const sender = entry.sender.normalize("NFKC").trim();
     const text = entry.text.trim();
-    if (text.length < 1 || text.length > 600) {
+    if (sender.length < 1 || sender.length > 60) {
       return null;
     }
 
-    parsed.push({ sender: entry.sender, text });
+    if (text.length < 1 || text.length > 2000) {
+      return null;
+    }
+
+    let dateTime: string | undefined;
+    if (typeof entry.date_time === "string") {
+      const cleaned = entry.date_time.trim();
+      if (cleaned.length > 60) {
+        return null;
+      }
+      if (cleaned.length > 0) {
+        dateTime = cleaned;
+      }
+    } else if (entry.date_time !== undefined && entry.date_time !== null) {
+      return null;
+    }
+
+    parsed.push(
+      dateTime ? { sender, text, date_time: dateTime } : { sender, text }
+    );
   }
 
   return parsed;

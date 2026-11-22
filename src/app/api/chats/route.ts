@@ -69,7 +69,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const messages = parseChatMessages(body.messages);
   if (!messages) {
     return NextResponse.json(
-      { error: "Add at least one valid chat line (max 50 lines)." },
+      { error: "Add at least one valid chat line (max 3000 lines)." },
       { status: 400 }
     );
   }

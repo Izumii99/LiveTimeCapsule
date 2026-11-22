@@ -1,6 +1,6 @@
-# Living Memory Capsule — Setup & Deployment Guide
+# Living Memory Capsule: Setup and Deployment Guide
 
-Private shared memory vault built with Next.js (App Router), Tailwind CSS, Framer Motion, and Supabase, configured for free-tier deployment on Vercel + Supabase.
+Private shared memory vault built with Next.js (App Router), Tailwind CSS, Framer Motion, and Supabase, configured for free-tier deployment on Vercel and Supabase.
 
 ## Project Structure
 

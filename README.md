@@ -1,10 +1,10 @@
 # Living Memory Capsule
 
-A private web app for storing shared screenshots, an opening letter, and exported chat logs between two close gaming friends. Built with Next.js (App Router), TypeScript, Tailwind CSS, Framer Motion, and Supabase, configured to run on Vercel and Supabase free tiers.
+A private web app for storing shared screenshots, an opening letter, and exported chat logs for our shared midnight home. Built with Next.js (App Router), TypeScript, Tailwind CSS, Framer Motion, and Supabase, configured to run on Vercel and Supabase free tiers.
 
 ## What it includes
 
-- Passcode lock screen backed by a timing-safe server check and an HMAC-SHA256 signed `HttpOnly` session cookie (with per-instance failed-attempt rate limiting).
+- Passcode lock screen backed by a timing-safe server check and a role-bound HMAC-SHA256 signed `HttpOnly` session cookie (with per-instance failed-attempt rate limiting). Supports a primary passcode (`CAPSULE_PASSCODE`) for full access and an optional guest passcode (`GUEST_PASSCODE`) that grants access to the Letter and Gallery while hiding and blocking Chat Highlights (`403 Forbidden` on `/api/chats/*`).
 - Opening letter rendered as an interactive sealed envelope, configured from a single file at `src/config/capsule.ts`.
 - Gallery in a responsive masonry layout with category filters (`#Moment`, `#FunnyChat`, `#OutfitCheck`, `#ItemGift`), author filters, a permanent open-slot upload card, full-view lightbox, mini note replies, and an optional Time Capsule Lock that blurs photos with a live countdown until the chosen date.
 - Client-side WebP compression (`browser-image-compression`, max 0.9 MB / 1920 px) uploaded directly to Supabase Storage through short-lived signed upload URLs, bypassing Vercel's 4.5 MB function payload limit. Deleting a memory removes its storage object as well.

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { requireOwner } from "@/lib/auth";
 import { mergeChatMessages } from "@/lib/chat-parser";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import type { ChatMessageLine } from "@/lib/types";
@@ -17,7 +17,7 @@ export async function PATCH(
   request: NextRequest,
   context: RouteContext
 ): Promise<NextResponse> {
-  const unauthorized = await requireAuth();
+  const unauthorized = await requireOwner();
   if (unauthorized) {
     return unauthorized;
   }
@@ -122,7 +122,7 @@ export async function DELETE(
   _request: NextRequest,
   context: RouteContext
 ): Promise<NextResponse> {
-  const unauthorized = await requireAuth();
+  const unauthorized = await requireOwner();
   if (unauthorized) {
     return unauthorized;
   }

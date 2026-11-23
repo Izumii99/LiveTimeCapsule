@@ -36,6 +36,7 @@ assert.equal(isAllowedCategory("#Unknown"), false);
 
 assert.equal(isAllowedAuthor("Izumi"), true);
 assert.equal(isAllowedAuthor("Rui"), true);
+assert.equal(isAllowedAuthor("Freya"), true);
 assert.equal(isAllowedAuthor("Stranger"), false);
 
 assert.equal(isValidDateOnly("2026-11-22"), true);

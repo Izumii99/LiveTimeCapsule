@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { requireOwner } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { parseChatMessages } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(): Promise<NextResponse> {
-  const unauthorized = await requireAuth();
+  const unauthorized = await requireOwner();
   if (unauthorized) {
     return unauthorized;
   }
@@ -43,7 +43,7 @@ interface CreateChatBody {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const unauthorized = await requireAuth();
+  const unauthorized = await requireOwner();
   if (unauthorized) {
     return unauthorized;
   }

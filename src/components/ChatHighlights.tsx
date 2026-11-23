@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Expand, Loader2, Plus, RefreshCw, Trash2 } from "lucide-react";
-import { CAPSULE_CONFIG } from "@/config/capsule";
 import { splitDateTime } from "@/lib/chat-parser";
 import { formatDateTime } from "@/lib/format";
 import type { ChatHighlight } from "@/lib/types";
@@ -157,8 +156,7 @@ export function ChatHighlights({
             Chat Highlights
           </h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            Import .txt chat exports or archive quotes between{" "}
-            {CAPSULE_CONFIG.friend} and {CAPSULE_CONFIG.me}.
+            Import .txt chat exports or archive memorable quotes from our chats.
           </p>
         </div>
 

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, RefreshCw } from "lucide-react";
 import {
   CAPSULE_AUTHORS,
-  CAPSULE_CONFIG,
   MEMORY_CATEGORIES,
   type CapsuleAuthor,
   type MemoryCategory,
@@ -16,12 +15,14 @@ import { useToast } from "./ToastProvider";
 import { UploadMemoryModal } from "./UploadMemoryModal";
 
 interface MemoryGalleryProps {
+  defaultAuthor: CapsuleAuthor;
   externalUploadOpen: boolean;
   onExternalUploadClose: () => void;
   onOpenUpload: () => void;
 }
 
 export function MemoryGallery({
+  defaultAuthor,
   externalUploadOpen,
   onExternalUploadClose,
   onOpenUpload,
@@ -147,8 +148,7 @@ export function MemoryGallery({
               Gallery
             </h2>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              Screenshots, outfit checks, gifted items, and moments saved by{" "}
-              {CAPSULE_CONFIG.me} &amp; {CAPSULE_CONFIG.friend}.
+              Screenshots, outfit checks, gifted items, and moments saved by us.
             </p>
           </div>
 
@@ -199,7 +199,7 @@ export function MemoryGallery({
           <div
             role="group"
             aria-label="Filter by author"
-            className="inline-flex self-start rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-input)] p-1 sm:self-auto"
+            className="inline-flex flex-wrap self-start rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-input)] p-1 sm:self-auto"
           >
             <button
               type="button"
@@ -210,7 +210,7 @@ export function MemoryGallery({
                   : "rounded-lg px-3 py-1 text-xs font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)]"
               }
             >
-              Both
+              All
             </button>
             {CAPSULE_AUTHORS.map((name) => {
               const active = authorFilter === name;
@@ -320,6 +320,7 @@ export function MemoryGallery({
       )}
 
       <UploadMemoryModal
+        defaultAuthor={defaultAuthor}
         isOpen={externalUploadOpen}
         onClose={onExternalUploadClose}
         onCreated={handleCreated}
@@ -328,6 +329,7 @@ export function MemoryGallery({
       {selectedMemory ? (
         <MemoryLightbox
           key={selectedMemory.id}
+          defaultAuthor={defaultAuthor}
           memory={selectedMemory}
           onClose={() => setSelectedMemoryId(null)}
           onDeleted={handleDeleted}

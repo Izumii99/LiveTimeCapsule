@@ -55,14 +55,10 @@ export function OpeningLetter({
                     id="opening-letter-heading"
                     className="font-serif text-xl font-medium text-[var(--text-primary)] sm:text-2xl"
                   >
-                    A sealed note for {CAPSULE_CONFIG.friend}
+                    {CAPSULE_CONFIG.sealedLetterHeading}
                   </h2>
                   <p className="mt-1.5 text-sm leading-relaxed text-[var(--text-secondary)]">
-                    From {CAPSULE_CONFIG.me} (
-                    {CAPSULE_CONFIG.meAliases.join(" / ")}) to{" "}
-                    {CAPSULE_CONFIG.friend} (
-                    {CAPSULE_CONFIG.friendAliases.join(" / ")}). Tap the seal to
-                    read inside.
+                    {CAPSULE_CONFIG.sealedLetterSubtitle}
                   </p>
                 </div>
               </div>
@@ -125,8 +121,14 @@ export function OpeningLetter({
         )}
       </AnimatePresence>
 
-      {onOpenGallery && onOpenChats ? (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {onOpenGallery ? (
+        <div
+          className={
+            onOpenChats
+              ? "mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
+              : "mt-6 grid grid-cols-1 gap-4"
+          }
+        >
           <button
             type="button"
             onClick={onOpenGallery}
@@ -151,29 +153,31 @@ export function OpeningLetter({
             />
           </button>
 
-          <button
-            type="button"
-            onClick={onOpenChats}
-            className="capsule-surface group flex items-center justify-between gap-4 rounded-2xl p-5 text-left transition-colors hover:border-[rgba(244,114,182,0.36)]"
-          >
-            <div className="flex items-start gap-3.5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[rgba(244,114,182,0.28)] bg-[rgba(244,114,182,0.12)] text-[#F9A8D4]">
-                <MessageSquareHeart className="h-4 w-4" aria-hidden="true" />
+          {onOpenChats ? (
+            <button
+              type="button"
+              onClick={onOpenChats}
+              className="capsule-surface group flex items-center justify-between gap-4 rounded-2xl p-5 text-left transition-colors hover:border-[rgba(244,114,182,0.36)]"
+            >
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[rgba(244,114,182,0.28)] bg-[rgba(244,114,182,0.12)] text-[#F9A8D4]">
+                  <MessageSquareHeart className="h-4 w-4" aria-hidden="true" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-base font-medium text-[var(--text-primary)]">
+                    Chat Highlights
+                  </h3>
+                  <p className="mt-0.5 text-xs leading-relaxed text-[var(--text-secondary)]">
+                    Archived .txt chat logs and favorite late-night quotes.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-serif text-base font-medium text-[var(--text-primary)]">
-                  Chat Highlights
-                </h3>
-                <p className="mt-0.5 text-xs leading-relaxed text-[var(--text-secondary)]">
-                  Archived .txt chat logs and favorite late-night quotes.
-                </p>
-              </div>
-            </div>
-            <ArrowRight
-              className="h-4 w-4 shrink-0 text-[var(--text-muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-[#F9A8D4]"
-              aria-hidden="true"
-            />
-          </button>
+              <ArrowRight
+                className="h-4 w-4 shrink-0 text-[var(--text-muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-[#F9A8D4]"
+                aria-hidden="true"
+              />
+            </button>
+          ) : null}
         </div>
       ) : null}
     </section>

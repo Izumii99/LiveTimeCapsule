@@ -3,7 +3,7 @@ import {
   attachSessionCookie,
   getClientIdentifier,
   isAuthConfigured,
-  validatePasscode,
+  resolvePasscode,
 } from "@/lib/auth";
 import {
   checkUnlockRateLimit,
@@ -57,7 +57,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  if (!validatePasscode(passcode)) {
+  const role = resolvePasscode(passcode);
+  if (!role) {
     recordFailedUnlock(clientKey);
     return NextResponse.json(
       {
@@ -69,6 +70,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   clearFailedUnlocks(clientKey);
-  const response = NextResponse.json({ unlocked: true }, { status: 200 });
-  return attachSessionCookie(response);
+  const response = NextResponse.json({ unlocked: true, role }, { status: 200 });
+  return attachSessionCookie(response, role);
 }

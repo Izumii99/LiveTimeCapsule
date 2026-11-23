@@ -10,6 +10,7 @@ import {
   Plus,
 } from "lucide-react";
 import { CAPSULE_CONFIG } from "@/config/capsule";
+import type { SessionRole } from "@/lib/auth-core";
 import { BgmPlayer } from "./BgmPlayer";
 import { CapsuleMark } from "./CapsuleMark";
 import { ChatHighlights } from "./ChatHighlights";
@@ -20,15 +21,17 @@ import { ToastProvider } from "./ToastProvider";
 type WorkspaceTab = "letter" | "gallery" | "chats";
 
 interface CapsuleWorkspaceProps {
+  role: SessionRole;
   isLocking: boolean;
   onLock: () => void;
 }
 
-const TABS: ReadonlyArray<{
+const ALL_TABS: ReadonlyArray<{
   id: WorkspaceTab;
   label: string;
   shortLabel: string;
   actionLabel: string;
+  ownerOnly?: boolean;
   icon: typeof Images;
 }> = [
   {
@@ -50,21 +53,36 @@ const TABS: ReadonlyArray<{
     label: "Chat Highlights",
     shortLabel: "Chats",
     actionLabel: "Add Chat",
+    ownerOnly: true,
     icon: MessageSquareHeart,
   },
 ];
 
-export function CapsuleWorkspace({ isLocking, onLock }: CapsuleWorkspaceProps) {
+export function CapsuleWorkspace({
+  role,
+  isLocking,
+  onLock,
+}: CapsuleWorkspaceProps) {
   const prefersReducedMotion = useReducedMotion();
+  const isOwner = role === "owner";
+  const visibleTabs = isOwner
+    ? ALL_TABS
+    : ALL_TABS.filter((tab) => !tab.ownerOnly);
+
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("letter");
   const [uploadMemoryOpen, setUploadMemoryOpen] = useState(false);
   const [addChatOpen, setAddChatOpen] = useState(false);
 
+  const effectiveTab: WorkspaceTab =
+    !isOwner && activeTab === "chats" ? "letter" : activeTab;
+
   const currentTabMeta =
-    TABS.find((tab) => tab.id === activeTab) ?? TABS[0];
+    visibleTabs.find((tab) => tab.id === effectiveTab) ?? visibleTabs[0];
+
+  const defaultAuthor = isOwner ? CAPSULE_CONFIG.me : CAPSULE_CONFIG.guest;
 
   function handlePrimaryAction() {
-    if (activeTab === "chats") {
+    if (isOwner && effectiveTab === "chats") {
       setAddChatOpen(true);
       return;
     }
@@ -85,7 +103,7 @@ export function CapsuleWorkspace({ isLocking, onLock }: CapsuleWorkspaceProps) {
                   {CAPSULE_CONFIG.appTitle}
                 </h1>
                 <p className="hidden text-xs text-[var(--text-muted)] sm:block">
-                  {CAPSULE_CONFIG.me} &amp; {CAPSULE_CONFIG.friend}
+                  {CAPSULE_CONFIG.houseMembersLabel}
                 </p>
               </div>
             </div>
@@ -95,9 +113,9 @@ export function CapsuleWorkspace({ isLocking, onLock }: CapsuleWorkspaceProps) {
               aria-label="Capsule sections"
               className="hidden items-center gap-1 rounded-xl border border-[var(--border-subtle)] bg-[rgba(20,18,29,0.85)] p-1 sm:flex"
             >
-              {TABS.map((tab) => {
+              {visibleTabs.map((tab) => {
                 const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
+                const isActive = effectiveTab === tab.id;
                 return (
                   <button
                     key={tab.id}
@@ -157,7 +175,7 @@ export function CapsuleWorkspace({ isLocking, onLock }: CapsuleWorkspaceProps) {
 
         <main className="mx-auto max-w-6xl px-4 pt-8 sm:px-8 sm:pt-12">
           <AnimatePresence mode="wait" initial={false}>
-            {activeTab === "letter" ? (
+            {effectiveTab === "letter" ? (
               <motion.div
                 key="tab-letter"
                 initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
@@ -167,10 +185,12 @@ export function CapsuleWorkspace({ isLocking, onLock }: CapsuleWorkspaceProps) {
               >
                 <OpeningLetter
                   onOpenGallery={() => setActiveTab("gallery")}
-                  onOpenChats={() => setActiveTab("chats")}
+                  onOpenChats={
+                    isOwner ? () => setActiveTab("chats") : undefined
+                  }
                 />
               </motion.div>
-            ) : activeTab === "gallery" ? (
+            ) : effectiveTab === "gallery" ? (
               <motion.div
                 key="tab-gallery"
                 initial={prefersReducedMotion ? false : { opacity: 0, y: 6 }}
@@ -179,6 +199,7 @@ export function CapsuleWorkspace({ isLocking, onLock }: CapsuleWorkspaceProps) {
                 transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
               >
                 <MemoryGallery
+                  defaultAuthor={defaultAuthor}
                   externalUploadOpen={uploadMemoryOpen}
                   onExternalUploadClose={() => setUploadMemoryOpen(false)}
                   onOpenUpload={() => setUploadMemoryOpen(true)}
@@ -207,10 +228,16 @@ export function CapsuleWorkspace({ isLocking, onLock }: CapsuleWorkspaceProps) {
           aria-label="Mobile capsule navigation"
           className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--border-subtle)] bg-[rgba(11,10,16,0.9)] px-3 py-2 backdrop-blur-md sm:hidden"
         >
-          <div className="mx-auto grid max-w-md grid-cols-3 gap-1">
-            {TABS.map((tab) => {
+          <div
+            className={
+              visibleTabs.length === 2
+                ? "mx-auto grid max-w-md grid-cols-2 gap-1"
+                : "mx-auto grid max-w-md grid-cols-3 gap-1"
+            }
+          >
+            {visibleTabs.map((tab) => {
               const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
+              const isActive = effectiveTab === tab.id;
               return (
                 <button
                   key={tab.id}

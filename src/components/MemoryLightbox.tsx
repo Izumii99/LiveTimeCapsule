@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import {
   CAPSULE_AUTHORS,
-  CAPSULE_CONFIG,
   type CapsuleAuthor,
 } from "@/config/capsule";
 import {
@@ -28,6 +27,7 @@ import { AuthorBadge } from "./AuthorBadge";
 import { useToast } from "./ToastProvider";
 
 interface MemoryLightboxProps {
+  defaultAuthor: CapsuleAuthor;
   memory: MemoryItem;
   onClose: () => void;
   onDeleted: (id: string) => void;
@@ -35,6 +35,7 @@ interface MemoryLightboxProps {
 }
 
 export function MemoryLightbox({
+  defaultAuthor,
   memory,
   onClose,
   onDeleted,
@@ -47,7 +48,7 @@ export function MemoryLightbox({
   const [notesLoading, setNotesLoading] = useState(true);
   const [notesError, setNotesError] = useState<string | null>(null);
 
-  const [noteAuthor, setNoteAuthor] = useState<CapsuleAuthor>(CAPSULE_CONFIG.me);
+  const [noteAuthor, setNoteAuthor] = useState<CapsuleAuthor>(defaultAuthor);
   const [noteContent, setNoteContent] = useState("");
   const [isSendingNote, setIsSendingNote] = useState(false);
 

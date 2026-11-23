@@ -18,8 +18,8 @@ import {
 } from "lucide-react";
 import {
   CAPSULE_AUTHORS,
-  CAPSULE_CONFIG,
   MEMORY_CATEGORIES,
+  getAuthorPrimaryAlias,
   type CapsuleAuthor,
   type MemoryCategory,
 } from "@/config/capsule";
@@ -32,6 +32,7 @@ import type { MemoryItem } from "@/lib/types";
 import { compressAndUploadImage, type UploadStage } from "@/lib/upload-client";
 
 interface UploadMemoryModalProps {
+  defaultAuthor: CapsuleAuthor;
   isOpen: boolean;
   onClose: () => void;
   onCreated: (memory: MemoryItem) => void;
@@ -47,6 +48,7 @@ const STAGE_LABELS: Record<Exclude<SubmitStage, null>, string> = {
 };
 
 export function UploadMemoryModal({
+  defaultAuthor,
   isOpen,
   onClose,
   onCreated,
@@ -63,7 +65,7 @@ export function UploadMemoryModal({
   const [caption, setCaption] = useState("");
   const [memoryDate, setMemoryDate] = useState(getTodayDateInputValue);
   const [category, setCategory] = useState<MemoryCategory>("#Moment");
-  const [author, setAuthor] = useState<CapsuleAuthor>(CAPSULE_CONFIG.me);
+  const [author, setAuthor] = useState<CapsuleAuthor>(defaultAuthor);
 
   const [isTimeCapsule, setIsTimeCapsule] = useState(false);
   const [unlockAtLocal, setUnlockAtLocal] = useState("");
@@ -128,7 +130,7 @@ export function UploadMemoryModal({
     setCaption("");
     setMemoryDate(getTodayDateInputValue());
     setCategory("#Moment");
-    setAuthor(CAPSULE_CONFIG.me);
+    setAuthor(defaultAuthor);
     setIsTimeCapsule(false);
     setUnlockAtLocal("");
     setSubmitStage(null);
@@ -428,13 +430,10 @@ export function UploadMemoryModal({
               <span className="mb-1.5 block text-sm font-medium text-[var(--text-primary)]">
                 Added by
               </span>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {CAPSULE_AUTHORS.map((name) => {
                   const isActive = author === name;
-                  const alias =
-                    name === CAPSULE_CONFIG.me
-                      ? CAPSULE_CONFIG.meAliases[0]
-                      : CAPSULE_CONFIG.friendAliases[0];
+                  const alias = getAuthorPrimaryAlias(name);
                   return (
                     <button
                       key={name}
@@ -443,12 +442,12 @@ export function UploadMemoryModal({
                       onClick={() => setAuthor(name)}
                       className={
                         isActive
-                          ? "rounded-xl border border-[var(--accent)] bg-[rgba(168,85,247,0.18)] px-3 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition-colors"
-                          : "rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-input)] px-3 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)]"
+                          ? "rounded-xl border border-[var(--accent)] bg-[rgba(168,85,247,0.18)] px-2.5 py-2.5 text-xs font-semibold text-[var(--text-primary)] transition-colors"
+                          : "rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-input)] px-2.5 py-2.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--border-strong)]"
                       }
                     >
-                      {name}{" "}
-                      <span className="text-xs font-normal opacity-75">
+                      <span className="block">{name}</span>
+                      <span className="block text-[10px] font-normal opacity-75">
                         ({alias})
                       </span>
                     </button>

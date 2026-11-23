@@ -4,14 +4,16 @@ import { useState, type FormEvent } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Eye, EyeOff, Loader2, Lock } from "lucide-react";
 import { CAPSULE_CONFIG } from "@/config/capsule";
+import type { SessionRole } from "@/lib/auth-core";
 import { CapsuleMark } from "./CapsuleMark";
 
 interface LockScreenProps {
-  onUnlocked: () => void;
+  onUnlocked: (role: SessionRole) => void;
 }
 
 interface UnlockResponse {
   unlocked?: boolean;
+  role?: SessionRole;
   error?: string;
 }
 
@@ -45,7 +47,7 @@ export function LockScreen({ onUnlocked }: LockScreenProps) {
 
       const data = (await response.json()) as UnlockResponse;
 
-      if (!response.ok || !data.unlocked) {
+      if (!response.ok || !data.unlocked || !data.role) {
         setErrorMessage(
           data.error ?? "That passcode didn't match. Try again."
         );
@@ -53,7 +55,7 @@ export function LockScreen({ onUnlocked }: LockScreenProps) {
         return;
       }
 
-      onUnlocked();
+      onUnlocked(data.role);
     } catch {
       setErrorMessage("Could not reach the vault right now. Please try again.");
       setShakeCount((prev) => prev + 1);
@@ -188,7 +190,7 @@ export function LockScreen({ onUnlocked }: LockScreenProps) {
         </motion.div>
 
         <p className="mt-7 text-center text-xs text-[var(--text-muted)]">
-          {CAPSULE_CONFIG.me} &amp; {CAPSULE_CONFIG.friend} &middot; Private Vault
+          {CAPSULE_CONFIG.houseMembersLabel} &middot; Private Vault
         </p>
       </motion.section>
     </main>

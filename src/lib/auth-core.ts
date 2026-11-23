@@ -3,7 +3,10 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
 export const SESSION_COOKIE_NAME = "capsule_session";
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 
-const TOKEN_VERSION = "v1";
+export type SessionRole = "owner" | "guest";
+
+const TOKEN_VERSION = "v2";
+const LEGACY_TOKEN_VERSION = "v1";
 const MIN_SECRET_LENGTH = 16;
 const MAX_CLOCK_SKEW_SECONDS = 60;
 
@@ -26,49 +29,30 @@ function signPayload(payload: string, secret: string): string {
   return createHmac("sha256", secret).update(payload, "utf8").digest("base64url");
 }
 
-export function verifyPasscode(candidate: string, expected: string): boolean {
-  if (!candidate || !expected) {
-    return false;
-  }
-
-  const candidateDigest = sha256Buffer(candidate);
-  const expectedDigest = sha256Buffer(expected);
-  return timingSafeEqual(candidateDigest, expectedDigest);
+function isValidRole(value: string): value is SessionRole {
+  return value === "owner" || value === "guest";
 }
 
-export function createSessionToken(secret: string, nowMs = Date.now()): string {
-  if (!secret || secret.length < MIN_SECRET_LENGTH) {
-    throw new Error("AUTH_SECRET must be at least 16 characters long.");
-  }
-
-  const issuedAt = Math.floor(nowMs / 1000);
-  const expiresAt = issuedAt + SESSION_TTL_SECONDS;
-  const nonce = randomBytes(16).toString("base64url");
-  const payload = `${TOKEN_VERSION}.${issuedAt}.${expiresAt}.${nonce}`;
-  const signature = signPayload(payload, secret);
-
-  return `${payload}.${signature}`;
-}
-
-export function verifySessionToken(
-  token: string | undefined,
-  secret: string,
-  nowMs = Date.now()
+function verifySignature(
+  payload: string,
+  providedSignature: string,
+  secret: string
 ): boolean {
-  if (!token || !secret || secret.length < MIN_SECRET_LENGTH) {
+  const expectedSignature = signPayload(payload, secret);
+  const providedBuf = Buffer.from(providedSignature, "utf8");
+  const expectedBuf = Buffer.from(expectedSignature, "utf8");
+  if (providedBuf.length !== expectedBuf.length) {
     return false;
   }
 
-  const parts = token.split(".");
-  if (parts.length !== 5) {
-    return false;
-  }
+  return timingSafeEqual(providedBuf, expectedBuf);
+}
 
-  const [version, issuedAtStr, expiresAtStr, nonce, providedSignature] = parts;
-  if (version !== TOKEN_VERSION || !nonce || !providedSignature) {
-    return false;
-  }
-
+function isWithinValidityWindow(
+  issuedAtStr: string,
+  expiresAtStr: string,
+  nowMs: number
+): boolean {
   const issuedAt = Number(issuedAtStr);
   const expiresAt = Number(expiresAtStr);
   if (!Number.isInteger(issuedAt) || !Number.isInteger(expiresAt)) {
@@ -80,20 +64,108 @@ export function verifySessionToken(
     return false;
   }
 
-  if (issuedAt > nowSeconds + MAX_CLOCK_SKEW_SECONDS) {
+  return issuedAt <= nowSeconds + MAX_CLOCK_SKEW_SECONDS;
+}
+
+export function verifyPasscode(candidate: string, expected: string): boolean {
+  if (!candidate || !expected) {
     return false;
   }
 
-  const payload = `${version}.${issuedAtStr}.${expiresAtStr}.${nonce}`;
-  const expectedSignature = signPayload(payload, secret);
+  const candidateDigest = sha256Buffer(candidate);
+  const expectedDigest = sha256Buffer(expected);
+  return timingSafeEqual(candidateDigest, expectedDigest);
+}
 
-  const providedBuf = Buffer.from(providedSignature, "utf8");
-  const expectedBuf = Buffer.from(expectedSignature, "utf8");
-  if (providedBuf.length !== expectedBuf.length) {
-    return false;
+export function resolvePasscodeRole(
+  candidate: string,
+  ownerPasscode: string,
+  guestPasscode = ""
+): SessionRole | null {
+  if (verifyPasscode(candidate, ownerPasscode)) {
+    return "owner";
   }
 
-  return timingSafeEqual(providedBuf, expectedBuf);
+  if (guestPasscode && verifyPasscode(candidate, guestPasscode)) {
+    return "guest";
+  }
+
+  return null;
+}
+
+export function createSessionToken(
+  secret: string,
+  role: SessionRole = "owner",
+  nowMs = Date.now()
+): string {
+  if (!secret || secret.length < MIN_SECRET_LENGTH) {
+    throw new Error("AUTH_SECRET must be at least 16 characters long.");
+  }
+
+  const issuedAt = Math.floor(nowMs / 1000);
+  const expiresAt = issuedAt + SESSION_TTL_SECONDS;
+  const nonce = randomBytes(16).toString("base64url");
+  const payload = `${TOKEN_VERSION}.${role}.${issuedAt}.${expiresAt}.${nonce}`;
+  const signature = signPayload(payload, secret);
+
+  return `${payload}.${signature}`;
+}
+
+export function parseSessionToken(
+  token: string | undefined,
+  secret: string,
+  nowMs = Date.now()
+): SessionRole | null {
+  if (!token || !secret || secret.length < MIN_SECRET_LENGTH) {
+    return null;
+  }
+
+  const parts = token.split(".");
+
+  if (parts.length === 6) {
+    const [version, role, issuedAtStr, expiresAtStr, nonce, providedSignature] =
+      parts;
+    if (
+      version !== TOKEN_VERSION ||
+      !isValidRole(role) ||
+      !nonce ||
+      !providedSignature
+    ) {
+      return null;
+    }
+
+    if (!isWithinValidityWindow(issuedAtStr, expiresAtStr, nowMs)) {
+      return null;
+    }
+
+    const payload = `${version}.${role}.${issuedAtStr}.${expiresAtStr}.${nonce}`;
+    return verifySignature(payload, providedSignature, secret) ? role : null;
+  }
+
+  // Keep existing v1 owner cookies valid until natural expiry
+  if (parts.length === 5) {
+    const [version, issuedAtStr, expiresAtStr, nonce, providedSignature] = parts;
+    if (version !== LEGACY_TOKEN_VERSION || !nonce || !providedSignature) {
+      return null;
+    }
+
+    if (!isWithinValidityWindow(issuedAtStr, expiresAtStr, nowMs)) {
+      return null;
+    }
+
+    const payload = `${version}.${issuedAtStr}.${expiresAtStr}.${nonce}`;
+    return verifySignature(payload, providedSignature, secret) ? "owner" : null;
+  }
+
+  return null;
+}
+
+export function verifySessionToken(
+  token: string | undefined,
+  secret: string,
+  nowMs = Date.now()
+): boolean {
+  return parseSessionToken(token, secret, nowMs) !== null;
 }
 
 export function checkUnlockRateLimit(

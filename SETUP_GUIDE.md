@@ -84,7 +84,8 @@ Never prefix either value with `NEXT_PUBLIC_`.
    ```env
    SUPABASE_URL=https://<your-project-ref>.supabase.co
    SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
-   CAPSULE_PASSCODE=<your-shared-secret>
+   CAPSULE_PASSCODE=<your-owner-secret>
+   GUEST_PASSCODE=<optional-guest-secret>
    AUTH_SECRET=<64-char-hex-output>
    ```
 4. *(Optional)* Customize copy, names, nicknames, or the opening letter in `src/config/capsule.ts`.
@@ -99,10 +100,11 @@ Never prefix either value with `NEXT_PUBLIC_`.
 
 1. Push this project to a GitHub repository (private repositories work on Vercel Hobby).
 2. Import the repository at [vercel.com/new](https://vercel.com/new).
-3. Under **Environment Variables**, add the same four server-only keys:
+3. Under **Environment Variables**, add the server-only keys:
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `CAPSULE_PASSCODE`
+   - `GUEST_PASSCODE` *(optional: unlocks Letter & Gallery only, hides and blocks Chat Highlights)*
    - `AUTH_SECRET`
 4. Click **Deploy**.
 5. Once live, verify `https://<your-app>.vercel.app/api/health` returns HTTP `200` with `{"status":"ok",...}`.

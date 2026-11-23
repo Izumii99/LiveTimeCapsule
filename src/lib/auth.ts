@@ -4,9 +4,12 @@ import {
   SESSION_COOKIE_NAME,
   SESSION_TTL_SECONDS,
   createSessionToken,
-  verifyPasscode,
-  verifySessionToken,
+  parseSessionToken,
+  resolvePasscodeRole,
+  type SessionRole,
 } from "./auth-core";
+
+export type { SessionRole };
 
 function getAuthSecret(): string {
   return process.env.AUTH_SECRET ?? "";
@@ -16,28 +19,40 @@ function getExpectedPasscode(): string {
   return process.env.CAPSULE_PASSCODE ?? "";
 }
 
+function getGuestPasscode(): string {
+  return (process.env.GUEST_PASSCODE ?? "").trim();
+}
+
 export function isAuthConfigured(): boolean {
   return getAuthSecret().length >= 16 && getExpectedPasscode().length > 0;
 }
 
-export function validatePasscode(candidate: string): boolean {
-  return verifyPasscode(candidate, getExpectedPasscode());
+export function resolvePasscode(candidate: string): SessionRole | null {
+  return resolvePasscodeRole(
+    candidate,
+    getExpectedPasscode(),
+    getGuestPasscode()
+  );
 }
 
-export async function isAuthenticated(): Promise<boolean> {
+export async function getSessionRole(): Promise<SessionRole | null> {
   const secret = getAuthSecret();
   if (secret.length < 16) {
-    return false;
+    return null;
   }
 
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  return verifySessionToken(token, secret);
+  return parseSessionToken(token, secret);
+}
+
+export async function isAuthenticated(): Promise<boolean> {
+  return (await getSessionRole()) !== null;
 }
 
 export async function requireAuth(): Promise<NextResponse | null> {
-  const unlocked = await isAuthenticated();
-  if (unlocked) {
+  const role = await getSessionRole();
+  if (role !== null) {
     return null;
   }
 
@@ -47,8 +62,30 @@ export async function requireAuth(): Promise<NextResponse | null> {
   );
 }
 
-export function attachSessionCookie(response: NextResponse): NextResponse {
-  const token = createSessionToken(getAuthSecret());
+export async function requireOwner(): Promise<NextResponse | null> {
+  const role = await getSessionRole();
+  if (role === null) {
+    return NextResponse.json(
+      { error: "Unauthorized. Please unlock the capsule first." },
+      { status: 401 }
+    );
+  }
+
+  if (role !== "owner") {
+    return NextResponse.json(
+      { error: "Forbidden. This section is restricted." },
+      { status: 403 }
+    );
+  }
+
+  return null;
+}
+
+export function attachSessionCookie(
+  response: NextResponse,
+  role: SessionRole
+): NextResponse {
+  const token = createSessionToken(getAuthSecret(), role);
   response.cookies.set({
     name: SESSION_COOKIE_NAME,
     value: token,

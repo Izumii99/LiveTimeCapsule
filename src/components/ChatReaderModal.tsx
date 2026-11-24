@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { FilePlus2, Loader2, Search, X } from "lucide-react";
+import { FilePlus2, Loader2, Pencil, Search, X } from "lucide-react";
 import { parseRawChatLog } from "@/lib/chat-parser";
 import type { ChatHighlight } from "@/lib/types";
+import { useBackdropClose } from "@/lib/use-backdrop-close";
 import { ChatBubbleStream } from "./ChatBubbleStream";
 import { useToast } from "./ToastProvider";
 
@@ -12,12 +13,14 @@ interface ChatReaderModalProps {
   chat: ChatHighlight;
   onClose: () => void;
   onUpdated: (updated: ChatHighlight) => void;
+  onEdit: () => void;
 }
 
 export function ChatReaderModal({
   chat,
   onClose,
   onUpdated,
+  onEdit,
 }: ChatReaderModalProps) {
   const prefersReducedMotion = useReducedMotion();
   const { notify } = useToast();
@@ -25,6 +28,7 @@ export function ChatReaderModal({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isAppending, setIsAppending] = useState(false);
+  const backdropProps = useBackdropClose(onClose, isAppending);
 
   const participants = useMemo(() => {
     const names = new Set<string>();
@@ -133,11 +137,7 @@ export function ChatReaderModal({
       aria-modal="true"
       aria-labelledby="chat-reader-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(6,5,10,0.84)] p-3 backdrop-blur-sm sm:p-6"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !isAppending) {
-          onClose();
-        }
-      }}
+      {...backdropProps}
     >
       <motion.div
         initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.98, y: 10 }}
@@ -174,6 +174,16 @@ export function ChatReaderModal({
                 }}
                 className="sr-only"
               />
+
+              <button
+                type="button"
+                disabled={isAppending}
+                onClick={onEdit}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--accent)] hover:text-[var(--text-primary)] disabled:opacity-50"
+              >
+                <Pencil className="h-3.5 w-3.5 text-[var(--accent-soft)]" aria-hidden="true" />
+                <span>Edit</span>
+              </button>
 
               <button
                 type="button"

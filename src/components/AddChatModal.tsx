@@ -24,6 +24,7 @@ import {
   parseRawChatLog,
 } from "@/lib/chat-parser";
 import type { ChatHighlight, ChatMessageLine } from "@/lib/types";
+import { useBackdropClose } from "@/lib/use-backdrop-close";
 import { ChatBubbleStream } from "./ChatBubbleStream";
 
 interface AddChatModalProps {
@@ -69,6 +70,7 @@ export function AddChatModal({
 
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const backdropProps = useBackdropClose(onClose, isSaving);
 
   const parsedImport = useMemo(() => parseRawChatLog(rawLog), [rawLog]);
 
@@ -270,11 +272,7 @@ export function AddChatModal({
       aria-modal="true"
       aria-labelledby="add-chat-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(6,5,10,0.78)] p-4 backdrop-blur-sm"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !isSaving) {
-          onClose();
-        }
-      }}
+      {...backdropProps}
     >
       <motion.div
         initial={prefersReducedMotion ? false : { opacity: 0, y: 12, scale: 0.98 }}

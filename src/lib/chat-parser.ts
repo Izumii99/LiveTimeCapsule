@@ -19,6 +19,25 @@ const FRIEND_IDENTIFIERS = new Set(
   )
 );
 
+const GUEST_IDENTIFIERS = new Set(
+  [CAPSULE_CONFIG.guest, ...CAPSULE_CONFIG.guestAliases].map((name) =>
+    name.normalize("NFKC").trim().toLowerCase()
+  )
+);
+
+function isKnownCapsuleSpeaker(sender: string): boolean {
+  const lower = sender.normalize("NFKC").trim().toLowerCase();
+  if (!lower) {
+    return false;
+  }
+
+  return (
+    ME_IDENTIFIERS.has(lower) ||
+    FRIEND_IDENTIFIERS.has(lower) ||
+    GUEST_IDENTIFIERS.has(lower)
+  );
+}
+
 export function normalizeSenderName(raw: string): string {
   const normalized = raw.normalize("NFKC").trim().replace(/\s+/g, " ");
   if (!normalized) {
@@ -164,15 +183,17 @@ export function parseRawChatLog(rawText: string): {
       continue;
     }
 
-    if (!usesBracketFormat) {
-      const colonMatch = line.match(SIMPLE_COLON_REGEX);
-      if (colonMatch) {
-        const sender = normalizeSenderName(colonMatch[1]);
-        const text = colonMatch[2].trim();
-        if (sender && text) {
-          parsed.push({ sender, text });
-          continue;
-        }
+    const colonMatch = line.match(SIMPLE_COLON_REGEX);
+    if (colonMatch) {
+      const sender = normalizeSenderName(colonMatch[1]);
+      const text = colonMatch[2].trim();
+      if (
+        sender &&
+        text &&
+        (!usesBracketFormat || isKnownCapsuleSpeaker(sender))
+      ) {
+        parsed.push({ sender, text });
+        continue;
       }
     }
 
@@ -183,4 +204,14 @@ export function parseRawChatLog(rawText: string): {
 
   const { merged, duplicatesSkipped } = mergeChatMessages([], parsed);
   return { messages: merged, duplicatesSkipped };
+}
+
+export function serializeChatMessagesToLog(messages: ChatMessageLine[]): string {
+  return messages
+    .map((msg) =>
+      msg.date_time
+        ? `[${msg.date_time}] ${msg.sender}: ${msg.text}`
+        : `${msg.sender}: ${msg.text}`
+    )
+    .join("\n");
 }

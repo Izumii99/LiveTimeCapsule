@@ -30,6 +30,7 @@ import {
 } from "@/lib/format";
 import type { MemoryItem } from "@/lib/types";
 import { compressAndUploadImage, type UploadStage } from "@/lib/upload-client";
+import { useBackdropClose } from "@/lib/use-backdrop-close";
 
 interface UploadMemoryModalProps {
   defaultAuthor: CapsuleAuthor;
@@ -77,6 +78,7 @@ export function UploadMemoryModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const isBusy = submitStage !== null;
+  const backdropProps = useBackdropClose(onClose, isBusy);
 
   useEffect(() => {
     return () => {
@@ -247,11 +249,7 @@ export function UploadMemoryModal({
       aria-modal="true"
       aria-labelledby="upload-memory-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(6,5,10,0.78)] p-4 backdrop-blur-sm"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !isBusy) {
-          onClose();
-        }
-      }}
+      {...backdropProps}
     >
       <motion.div
         initial={prefersReducedMotion ? false : { opacity: 0, y: 12, scale: 0.98 }}

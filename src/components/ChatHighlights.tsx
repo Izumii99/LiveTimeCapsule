@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Expand, Loader2, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Expand, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { splitDateTime } from "@/lib/chat-parser";
 import { formatDateTime } from "@/lib/format";
 import type { ChatHighlight } from "@/lib/types";
 import { AddChatModal } from "./AddChatModal";
 import { ChatBubbleStream } from "./ChatBubbleStream";
 import { ChatReaderModal } from "./ChatReaderModal";
+import { EditChatModal, type ChatEditDraft } from "./EditChatModal";
 import { useToast } from "./ToastProvider";
 
 interface ChatHighlightsProps {
@@ -44,6 +45,10 @@ export function ChatHighlights({
   const [reloadTick, setReloadTick] = useState(0);
 
   const [activeReaderId, setActiveReaderId] = useState<string | null>(null);
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editDrafts, setEditDrafts] = useState<Record<string, ChatEditDraft>>(
+    {}
+  );
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -92,6 +97,11 @@ export function ChatHighlights({
     [chats, activeReaderId]
   );
 
+  const editingChat = useMemo(
+    () => chats.find((item) => item.id === editingChatId) ?? null,
+    [chats, editingChatId]
+  );
+
   const handleRetry = useCallback(() => {
     setIsLoading(true);
     setLoadError(null);
@@ -114,7 +124,39 @@ export function ChatHighlights({
     setChats((prev) =>
       prev.map((item) => (item.id === updated.id ? updated : item))
     );
+    setEditDrafts((prev) => {
+      if (!prev[updated.id]) {
+        return prev;
+      }
+      const rest = { ...prev };
+      delete rest[updated.id];
+      return rest;
+    });
   }, []);
+
+  const handleSavedEdit = useCallback(
+    (updated: ChatHighlight) => {
+      setChats((prev) =>
+        prev.map((item) => (item.id === updated.id ? updated : item))
+      );
+      notify(`Saved changes to "${updated.title}".`);
+    },
+    [notify]
+  );
+
+  const handleDraftChange = useCallback(
+    (chatId: string, draft: ChatEditDraft | null) => {
+      setEditDrafts((prev) => {
+        if (draft === null) {
+          const rest = { ...prev };
+          delete rest[chatId];
+          return rest;
+        }
+        return { ...prev, [chatId]: draft };
+      });
+    },
+    []
+  );
 
   async function handleDelete(chat: ChatHighlight) {
     setDeletingId(chat.id);
@@ -134,6 +176,10 @@ export function ChatHighlights({
       if (activeReaderId === chat.id) {
         setActiveReaderId(null);
       }
+      if (editingChatId === chat.id) {
+        setEditingChatId(null);
+      }
+      handleDraftChange(chat.id, null);
       notify(`Deleted "${chat.title}".`);
     } catch (err) {
       notify(
@@ -224,6 +270,7 @@ export function ChatHighlights({
           {chats.map((chat) => {
             const isConfirming = confirmDeleteId === chat.id;
             const isDeleting = deletingId === chat.id;
+            const hasUnsavedDraft = Boolean(editDrafts[chat.id]);
             const remainingCount = Math.max(
               0,
               chat.messages.length - PREVIEW_LIMIT
@@ -236,9 +283,16 @@ export function ChatHighlights({
               >
                 <div className="flex items-start justify-between gap-3 border-b border-[var(--border-subtle)] pb-3.5">
                   <div className="min-w-0">
-                    <h3 className="truncate font-serif text-lg font-medium text-[var(--text-primary)]">
-                      {chat.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate font-serif text-lg font-medium text-[var(--text-primary)]">
+                        {chat.title}
+                      </h3>
+                      {hasUnsavedDraft ? (
+                        <span className="shrink-0 rounded-full border border-[rgba(192,132,252,0.35)] bg-[rgba(168,85,247,0.14)] px-2 py-0.5 text-[10px] font-medium text-[#D8B4FE]">
+                          Draft
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="tabular-nums mt-0.5 text-xs text-[var(--text-muted)]">
                       {chat.messages.length}{" "}
                       {chat.messages.length === 1 ? "message" : "messages"}{" "}
@@ -247,6 +301,16 @@ export function ChatHighlights({
                   </div>
 
                   <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setEditingChatId(chat.id)}
+                      aria-label={`Edit ${chat.title}`}
+                      title="Edit chat"
+                      className="rounded-lg p-1.5 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-elevated)] hover:text-[var(--accent-soft)]"
+                    >
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => setActiveReaderId(chat.id)}
@@ -342,6 +406,22 @@ export function ChatHighlights({
           chat={activeReaderChat}
           onClose={() => setActiveReaderId(null)}
           onUpdated={handleUpdated}
+          onEdit={() => {
+            const targetId = activeReaderChat.id;
+            setActiveReaderId(null);
+            setEditingChatId(targetId);
+          }}
+        />
+      ) : null}
+
+      {editingChat ? (
+        <EditChatModal
+          key={editingChat.id}
+          chat={editingChat}
+          initialDraft={editDrafts[editingChat.id]}
+          onDraftChange={handleDraftChange}
+          onClose={() => setEditingChatId(null)}
+          onSaved={handleSavedEdit}
         />
       ) : null}
     </section>

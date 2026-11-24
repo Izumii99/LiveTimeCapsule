@@ -13,38 +13,61 @@ interface RouteContext {
 
 const MAX_TOTAL_MESSAGES = 3000;
 
-export async function PATCH(
-  request: NextRequest,
-  context: RouteContext
+interface PatchChatBody {
+  mode?: unknown;
+  title?: unknown;
+  messages?: unknown;
+}
+
+async function replaceChatHighlight(
+  id: string,
+  rawTitle: unknown,
+  incoming: ChatMessageLine[]
 ): Promise<NextResponse> {
-  const unauthorized = await requireOwner();
-  if (unauthorized) {
-    return unauthorized;
+  const title = typeof rawTitle === "string" ? rawTitle.trim() : "";
+  if (title.length < 1 || title.length > 120) {
+    return NextResponse.json(
+      { error: "Title must be between 1 and 120 characters." },
+      { status: 400 }
+    );
   }
 
-  const { id } = await context.params;
-  if (!isValidUuid(id)) {
-    return NextResponse.json({ error: "Invalid chat ID." }, { status: 400 });
-  }
-
-  let body: { messages?: unknown };
   try {
-    body = (await request.json()) as { messages?: unknown };
+    const supabase = getSupabaseAdmin();
+    const { data: updated, error: updateError } = await supabase
+      .from("chat_highlights")
+      .update({ title, messages: incoming })
+      .eq("id", id)
+      .select("id, title, messages, created_at")
+      .maybeSingle();
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: "Could not update this chat highlight." },
+        { status: 500 }
+      );
+    }
+
+    if (!updated) {
+      return NextResponse.json(
+        { error: "Chat highlight not found." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ chat: updated }, { status: 200 });
   } catch {
     return NextResponse.json(
-      { error: "Invalid request payload." },
-      { status: 400 }
+      { error: "Database connection is not configured yet." },
+      { status: 503 }
     );
   }
+}
 
-  const incoming = parseChatMessages(body.messages);
-  if (!incoming) {
-    return NextResponse.json(
-      { error: "Provide at least one valid chat message to append." },
-      { status: 400 }
-    );
-  }
-
+async function appendChatHighlight(
+  id: string,
+  incoming: ChatMessageLine[]
+): Promise<NextResponse> {
   try {
     const supabase = getSupabaseAdmin();
     const { data: existing, error: fetchError } = await supabase
@@ -116,6 +139,53 @@ export async function PATCH(
       { status: 503 }
     );
   }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  context: RouteContext
+): Promise<NextResponse> {
+  const unauthorized = await requireOwner();
+  if (unauthorized) {
+    return unauthorized;
+  }
+
+  const { id } = await context.params;
+  if (!isValidUuid(id)) {
+    return NextResponse.json({ error: "Invalid chat ID." }, { status: 400 });
+  }
+
+  let body: PatchChatBody;
+  try {
+    body = (await request.json()) as PatchChatBody;
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid request payload." },
+      { status: 400 }
+    );
+  }
+
+  if (
+    body.mode !== undefined &&
+    body.mode !== "append" &&
+    body.mode !== "replace"
+  ) {
+    return NextResponse.json({ error: "Invalid update mode." }, { status: 400 });
+  }
+
+  const incoming = parseChatMessages(body.messages);
+  if (!incoming) {
+    return NextResponse.json(
+      { error: "Provide at least one valid chat message (max 3000 lines)." },
+      { status: 400 }
+    );
+  }
+
+  if (body.mode === "replace") {
+    return replaceChatHighlight(id, body.title, incoming);
+  }
+
+  return appendChatHighlight(id, incoming);
 }
 
 export async function DELETE(

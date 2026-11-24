@@ -22,6 +22,7 @@ import {
   formatDateTime,
 } from "@/lib/format";
 import type { MemoryItem, MemoryNote } from "@/lib/types";
+import { useBackdropClose } from "@/lib/use-backdrop-close";
 import { isMemoryLocked } from "@/lib/validation";
 import { AuthorBadge } from "./AuthorBadge";
 import { useToast } from "./ToastProvider";
@@ -55,6 +56,7 @@ export function MemoryLightbox({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const backdropProps = useBackdropClose(onClose, isDeleting);
 
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -241,11 +243,7 @@ export function MemoryLightbox({
       aria-modal="true"
       aria-labelledby="lightbox-memory-title"
       className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(6,5,10,0.84)] p-3 backdrop-blur-sm sm:p-6"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !isDeleting) {
-          onClose();
-        }
-      }}
+      {...backdropProps}
     >
       <motion.div
         initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.98, y: 10 }}

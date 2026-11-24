@@ -5,6 +5,7 @@ import {
   normalizeSenderName,
   parseRawChatLog,
   resolveChatSide,
+  serializeChatMessagesToLog,
   splitDateTime,
 } from "../src/lib/chat-parser.ts";
 
@@ -61,5 +62,14 @@ const merged = mergeChatMessages(parsed.messages, [
 assert.equal(merged.addedCount, 1);
 assert.equal(merged.duplicatesSkipped, 1);
 assert.equal(merged.merged.length, 3);
+
+// 7. Round-trip serialization for bulk editing (including mixed dated + dateless lines)
+const mixedMessages = [
+  ...merged.merged,
+  { sender: "Rui", text: "added manually later" },
+];
+const serialized = serializeChatMessagesToLog(mixedMessages);
+const reparsed = parseRawChatLog(serialized);
+assert.deepEqual(reparsed.messages, mixedMessages);
 
 console.log("chat-parser checks passed");

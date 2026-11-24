@@ -1,5 +1,6 @@
 import { resolveChatSide, splitDateTime } from "@/lib/chat-parser";
 import type { ChatMessageLine } from "@/lib/types";
+import { DiscordText } from "./DiscordText";
 
 interface ChatBubbleStreamProps {
   messages: ChatMessageLine[];
@@ -59,7 +60,7 @@ export function ChatBubbleStream({
                     : "max-w-[85%] rounded-2xl rounded-bl-md border border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3.5 py-2 text-sm leading-relaxed text-[var(--text-primary)]"
                 }
               >
-                <p className="whitespace-pre-line break-words">{line.text}</p>
+                <DiscordText text={line.text} />
                 {time ? (
                   <span
                     className={

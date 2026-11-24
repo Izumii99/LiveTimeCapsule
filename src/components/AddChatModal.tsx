@@ -291,8 +291,9 @@ export function AddChatModal({
               Archive a Chat Exchange
             </h2>
             <p className="mt-1 text-xs text-[var(--text-muted)]">
-              Import .txt chat exports directly (with fancy font cleanup &amp;
-              deduplication) or write a short highlight manually.
+              Import .txt chat exports or write highlights manually. Supports
+              Discord formatting (*italic*, **bold**, __underline__, ~~strike~~,
+              ||spoiler||).
             </p>
           </div>
 
